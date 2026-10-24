@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Desk – AI Study Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF0F4;--sd:#CBD0DA;--sl:#fff;--ink:#3B3F4A;--mute:#979DAB;--or:#FF7A1A;--red:#F04438;--green:#2FBF71;--blue:#5B8DEF;--line:#E1E4EB;--ok:#E1F5EA;--bad:#FDE4E2;
+--raise:8px 8px 18px var(--sd),-8px -8px 18px var(--sl);--raise2:4px 4px 10px var(--sd),-4px -4px 10px var(--sl);--inset:inset 5px 5px 11px var(--sd),inset -5px -5px 11px var(--sl);--ins2:inset 3px 3px 7px var(--sd),inset -3px -3px 7px var(--sl);--og:linear-gradient(145deg,#FFA24C,#FF6A00);--oglow:6px 6px 14px rgba(255,122,26,.35),-4px -4px 10px var(--sl)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(145deg,#F6F7FA,#E8EBF0) fixed;color:var(--ink);font:15px/1.5 "Outfit",system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--or);outline-offset:3px}
+.shell{max-width:1340px;margin:0 auto;padding:0 26px 40px}
+.hdr{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;margin-bottom:28px}
+.hl{display:flex;align-items:center;gap:14px;min-width:0}
+.hr{display:flex;justify-content:flex-end}
+.logo{width:48px;height:48px;border-radius:50%;background:var(--bg);box-shadow:var(--raise2);color:var(--or);display:grid;place-items:center;flex:none;transition:transform .4s}
+.logo:hover{transform:rotate(-10deg) scale(1.06)}
+.pill{display:flex;align-items:center;gap:9px;background:var(--bg);box-shadow:var(--inset);border-radius:999px;padding:11px 18px;font-size:13px;font-weight:500;color:var(--mute);max-width:240px;min-width:0}
+.pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;background:#B7BCC8;flex:none}
+.pill.ok{color:var(--ink)}
+.pill.ok .dot{background:var(--or);animation:ping 2s infinite}
+.pill.busy .dot{background:var(--red);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.ttl{text-align:center;padding:30px 54px 14px;margin-top:0;border-radius:0 0 34px 34px;background:var(--bg);box-shadow:var(--raise);align-self:start}
+.ttl b{display:block;font-size:19px;font-weight:500;letter-spacing:.38em;margin-right:-.38em}
+.ttl small{display:block;font-size:9px;letter-spacing:.42em;color:var(--mute);margin-right:-.42em}
+.app{display:grid;grid-template-columns:78px minmax(0,1fr);gap:28px;align-items:start}
+.nav{position:sticky;top:22px;display:flex;flex-direction:column;gap:12px;padding:13px;background:var(--bg);border-radius:40px;box-shadow:var(--raise)}
+.ind{position:absolute;top:0;left:0;width:52px;height:52px;border-radius:50%;background:var(--og);box-shadow:0 8px 18px rgba(255,122,26,.4);transition:transform .45s cubic-bezier(.3,.8,.3,1),width .45s,height .45s}
+.nav button{position:relative;z-index:1;width:52px;height:52px;border:0;border-radius:50%;background:none;color:var(--mute);display:grid;place-items:center;cursor:pointer;box-shadow:var(--raise2);transition:color .25s}
+.nav button[aria-current=true]{color:#fff;box-shadow:none}
+.nav button span{position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%);background:var(--bg);box-shadow:var(--raise2);color:var(--ink);padding:6px 14px;border-radius:12px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
+.nav button:hover span,.nav button:focus-visible span{opacity:1}
+.btn{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:999px;padding:11px 22px;font-weight:500;cursor:pointer;background:var(--bg);color:var(--ink);box-shadow:var(--raise2);transition:transform .15s,box-shadow .2s,opacity .2s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:active:not(:disabled){box-shadow:var(--ins2);transform:none}
+.btn.red{background:var(--og);color:#fff;box-shadow:var(--oglow)}
+.btn.red:active:not(:disabled){box-shadow:inset 3px 3px 8px rgba(160,60,0,.5)}
+.btn.ghost{box-shadow:var(--ins2);color:var(--mute)}
+.btn:disabled{opacity:.55;cursor:wait}
+h1{margin:0;font-size:40px;font-weight:300;letter-spacing:-.01em;line-height:1.15}
+h2{margin:0 0 4px;font-size:28px;font-weight:400;letter-spacing:-.01em}
+.sub{margin:6px 0 22px;color:var(--mute);font-size:14px}
+.ov{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.2fr) minmax(0,.95fr);gap:22px;margin-bottom:22px;align-items:start}
+.cl,.cc,.cr{display:grid;gap:22px;min-width:0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.stat,.card{background:var(--bg);box-shadow:var(--raise);transition:transform .25s}
+.stat{border-radius:22px;padding:14px}
+.card{border-radius:28px;padding:20px 22px;min-width:0}
+.stat:hover,.card:hover{transform:translateY(-3px)}
+.stat .top{display:flex;justify-content:space-between;align-items:flex-end}
+.stat small{display:block;color:var(--mute);font-size:12px}
+.stat b{font-size:32px;font-weight:300;line-height:1.2;letter-spacing:-.02em}
+.stat .foot{display:flex;justify-content:space-between;align-items:center;padding-top:8px;font-size:11px;color:var(--mute)}
+.spark{display:flex;gap:3px;align-items:flex-end;height:34px}
+.spark i{width:5px;background:linear-gradient(#FFB77A,#FF7A1A);border-radius:3px;opacity:.45;transform-origin:bottom;animation:growh .7s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--d,0)*60ms + .3s)}
+.spark i.r{opacity:1}
+.card header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.card h3{margin:0;font-size:15px;font-weight:500}
+.card header a,.tagl{font-size:12px;color:var(--mute);cursor:pointer}
+ul{list-style:none;margin:0;padding:0}
+li{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:9px 0}
+li[data-go]{cursor:pointer;transition:transform .2s}
+li[data-go]:hover{transform:translateX(4px)}
+li[data-go]:hover b{color:var(--or)}
+li b{display:block;font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+li small{display:block;font-size:12px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+li>div{min-width:0}
+li time{font-size:11px;color:var(--mute)}
+.ico{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--mute);background:var(--bg);box-shadow:var(--raise2)}
+.ico.red{background:var(--og);color:#fff;box-shadow:var(--oglow)}
+.tag{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:600;box-shadow:var(--raise2)}
+.none{color:var(--mute);font-size:14px;padding:12px 0}
+.tot{background:var(--bg);box-shadow:var(--inset);border-radius:18px;padding:11px 16px;margin:4px 0 18px}
+.tot small{display:block;font-size:12px;color:var(--mute)}
+.tot b{font-size:22px;font-weight:400}
+.donut{position:relative;width:150px;height:150px;border-radius:50%;margin:0 auto;box-shadow:var(--raise);animation:spin .9s cubic-bezier(.2,.8,.2,1) backwards .3s}
+.donut::after{content:"";position:absolute;inset:26px;border-radius:50%;background:var(--bg);box-shadow:var(--inset)}
+@keyframes spin{from{transform:rotate(-140deg) scale(.85);opacity:0}}
+.leg{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:18px;font-size:12px;color:var(--mute)}
+.leg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.orb{position:relative;width:min(100%,410px);aspect-ratio:1;margin:0 auto;border-radius:50%;background:linear-gradient(145deg,#F8F9FB,#E6E9EE);box-shadow:14px 14px 34px var(--sd),-14px -14px 34px var(--sl);animation:orbin 1s cubic-bezier(.2,.8,.2,1) backwards}
+@keyframes orbin{from{opacity:0;transform:scale(.88)}}
+.ring{position:absolute;inset:3%;width:94%;height:94%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:5;stroke-linecap:round}
+.trk{stroke:#E0E3EA}
+.arc{stroke:var(--or);stroke-dasharray:578;stroke-dashoffset:578;transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 5px rgba(255,122,26,.5))}
+.inner{position:absolute;inset:11%;border-radius:50%;box-shadow:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:9%}
+.lamp{position:absolute;top:-4%;left:27%;width:46%;transform-origin:50% 0;animation:sway 6s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-2.5deg)}to{transform:rotate(2.5deg)}}
+.big{font-size:clamp(40px,5.2vw,58px);font-weight:300;line-height:1;color:var(--ink)}
+.big span{color:#B6BBC7}
+.cap{margin:6px 0 14px;font-size:12px;color:var(--mute);letter-spacing:.06em}
+.pw{width:60px;height:60px;border-radius:50%;border:0;background:var(--bg);color:var(--or);display:grid;place-items:center;cursor:pointer;box-shadow:var(--raise2);transition:transform .2s}
+.pw:hover{transform:scale(1.08)}
+.pw:active{box-shadow:var(--ins2)}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.step{display:flex;align-items:center;gap:10px;background:var(--bg);box-shadow:var(--ins2);border-radius:16px;padding:10px 12px;font-size:13px;color:var(--mute);animation:rise .5s backwards;animation-delay:calc(var(--d)*80ms + .35s)}
+.step.done{color:var(--ink);font-weight:500}
+.chk{width:26px;height:26px;border-radius:50%;background:var(--bg);box-shadow:var(--raise2);display:grid;place-items:center;font-size:11px;font-weight:600;flex:none}
+.step.done .chk{background:var(--og);color:#fff;box-shadow:none;animation:pop .5s}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips button{background:var(--bg);box-shadow:var(--raise2);border:0;border-radius:999px;padding:7px 14px;font-size:12px;cursor:pointer;transition:transform .15s}
+.chips button:hover{transform:translateY(-2px)}
+.ai{position:relative;overflow:hidden;color:#fff;display:flex;flex-direction:column;gap:14px;min-height:260px;background:radial-gradient(70% 70% at 90% 0,rgba(255,138,40,.4),transparent 70%),linear-gradient(160deg,#3D404A,#1E2027)}
+.ai::before{content:"";position:absolute;width:200px;height:200px;right:-50px;top:-80px;border-radius:50%;background:var(--or);filter:blur(60px);opacity:.35;animation:drift 7s ease-in-out infinite alternate}
+.ai>*{position:relative}
+.ai .chips button{background:rgba(255,255,255,.1);color:#fff;box-shadow:none}
+.glass{margin-top:auto;display:grid;gap:8px}
+.glass small{color:rgba(255,255,255,.7);font-size:12px}
+.in{display:flex;gap:8px;background:rgba(0,0,0,.35);box-shadow:inset 3px 3px 8px rgba(0,0,0,.5),inset -2px -2px 6px rgba(255,255,255,.06);border-radius:999px;padding:6px 6px 6px 18px}
+.in:focus-within{outline:2px solid var(--or)}
+.in input{flex:1;border:0;outline:0;background:none;color:#fff;min-width:0}
+.in input::placeholder{color:rgba(255,255,255,.5)}
+.send{width:38px;height:38px;border-radius:50%;border:0;background:var(--og);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none;transition:transform .2s}
+.send:hover{transform:rotate(-12deg) scale(1.1)}
+.chart{display:flex;gap:10px;margin-top:10px}
+.chart>div:last-child{flex:1;min-width:0}
+.yl{display:flex;flex-direction:column;justify-content:space-between;height:170px;font-size:11px;color:var(--mute);text-align:right;padding:6px 0}
+.plot{position:relative;height:170px;display:flex;gap:8px;align-items:flex-end;padding:0 10px;border-radius:18px;box-shadow:var(--inset);background:repeating-linear-gradient(to top,transparent 0 calc(25% - 1px),rgba(180,186,200,.25) calc(25% - 1px) 25%)}
+.plot .none{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.col{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center}
+.bar{position:relative;width:100%;max-width:30px;background:linear-gradient(#FFDDBF,#FFC48F);border-radius:10px 10px 0 0;animation:growh .8s cubic-bezier(.2,.8,.2,1) backwards .25s}
+.bar.hot{background:var(--og);box-shadow:0 0 16px rgba(255,122,26,.45)}
+.bar em{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg);box-shadow:var(--raise2);color:var(--or);font:600 11px/1 "Outfit",sans-serif;padding:5px 8px;border-radius:8px;white-space:nowrap;animation:fade .4s 1s backwards}
+.xl{display:flex;gap:8px;padding:0 10px;font-size:11px;color:var(--mute);margin-top:8px}
+.xl span{flex:1;text-align:center}
+.panel{background:var(--bg);box-shadow:var(--raise);border-radius:34px;padding:32px;max-width:900px;margin:0 auto}
+.lead{margin:0 0 20px;color:var(--mute)}
+.bar2{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.meta{color:var(--mute);font-size:14px}
+select{background:var(--bg);box-shadow:var(--ins2);border:0;border-radius:999px;padding:9px 14px;margin-left:4px}
+.pg{display:inline-block;background:#FFE7D2;color:#C65A00;border-radius:999px;padding:0 9px;font-size:11px;font-weight:600;margin:0 2px;line-height:1.7}
+.md p{margin:.4em 0}
+.md ul,.md ol{margin:.4em 0;padding-left:1.4em}
+.md ul{list-style:disc}
+.md li{display:list-item;padding:2px 0}
+.md h4{margin:.9em 0 .2em;font-size:17px;font-weight:500}
+.md code{background:var(--bg);box-shadow:var(--ins2);padding:1px 7px;border-radius:6px;font-size:.92em}
+.md table{display:block;overflow-x:auto;border-collapse:collapse;margin:.6em 0}
+.md td{border:1px solid var(--line);padding:6px 10px}
+.md tr:first-child td{font-weight:600;background:rgba(255,255,255,.6)}
+.md>*{animation:rise .5s backwards;animation-delay:calc(var(--i,0)*45ms)}
+#tab-chat .panel{display:flex;flex-direction:column;height:calc(100vh - 170px);min-height:460px}
+#msgs{flex:1;overflow:auto;display:flex;flex-direction:column;gap:16px;padding:6px 8px 16px}
+.msg{max-width:88%;padding:12px 18px;border-radius:22px 22px 22px 6px;background:var(--bg);box-shadow:var(--raise2);animation:rise .4s backwards}
+.msg.md{position:relative;margin-left:44px}
+.msg.md::before{content:"✦";position:absolute;left:-44px;top:0;width:32px;height:32px;border-radius:50%;background:var(--og);color:#fff;display:grid;place-items:center;font-size:14px;box-shadow:var(--oglow)}
+.msg.me{align-self:flex-end;background:var(--og);color:#fff;border-radius:22px 22px 6px 22px;white-space:pre-wrap;box-shadow:var(--oglow)}
+.srcs{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:var(--mute)}
+summary{cursor:pointer;margin-top:6px}
+.passage{margin:8px 0;padding:9px 12px;border-left:3px solid var(--or);background:var(--bg);box-shadow:var(--ins2);border-radius:0 12px 12px 0;font-size:13px;white-space:pre-wrap;color:var(--ink)}
+.empty{margin:auto;text-align:center;color:var(--mute);max-width:380px}
+.empty b{color:var(--ink);font-size:22px;font-weight:400}
+.empty .chips{justify-content:center}
+.typing{display:flex;gap:5px;padding:5px 2px}
+.typing i{width:8px;height:8px;border-radius:50%;background:var(--or);animation:bounce 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.15s}
+.typing i:nth-child(3){animation-delay:.3s}
+.mf{display:flex;gap:12px;align-items:center;margin-top:8px;font-size:12px;color:var(--mute)}
+.cp{border:0;background:none;color:var(--mute);cursor:pointer;padding:0;text-decoration:underline}
+.composer{display:flex;gap:12px;align-items:flex-end;padding-top:16px}
+.composer label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}
+textarea{flex:1;resize:none;border:0;background:var(--bg);box-shadow:var(--inset);border-radius:24px;padding:13px 20px;max-height:140px}
+textarea:focus{outline:2px solid var(--or)}
+.paper{background:var(--bg);box-shadow:var(--inset);border-radius:24px;padding:20px 26px}
+.qstat{position:sticky;top:10px;z-index:2;background:var(--bg);box-shadow:var(--raise2);border-radius:20px;padding:12px 18px;font-weight:500;margin-bottom:16px}
+.qprog{height:8px;background:var(--bg);box-shadow:var(--ins2);border-radius:4px;margin-top:9px;overflow:hidden}
+.qprog i{display:block;height:100%;width:0;background:var(--og);border-radius:4px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.q{background:var(--bg);box-shadow:var(--inset);border-radius:26px;padding:20px 22px;margin-bottom:18px}
+.q h3{margin:0 0 12px;font-size:17px;font-weight:500;line-height:1.4}
+.opt{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--bg);border:0;border-radius:18px;padding:11px 14px;margin-top:10px;cursor:pointer;box-shadow:var(--raise2);transition:transform .15s,box-shadow .2s,background .2s}
+.opt b{flex:none;width:28px;height:28px;border-radius:50%;background:var(--bg);box-shadow:var(--ins2);display:grid;place-items:center;font-size:13px;color:var(--or)}
+.opt:hover:not(:disabled){transform:translateX(3px)}
+.opt:disabled{cursor:default}
+.opt.ok{background:var(--ok);box-shadow:var(--ins2);animation:pop .45s}
+.opt.ok b{background:var(--green);color:#fff;box-shadow:none}
+.opt.bad{background:var(--bad);box-shadow:var(--ins2);animation:shake .4s}
+.opt.bad b{background:var(--red);color:#fff;box-shadow:none}
+.why{margin-top:14px;padding:12px 14px;border-radius:16px;background:var(--bg);box-shadow:var(--ins2);font-size:14px;animation:rise .4s backwards}
+.result{background:var(--og);color:#fff;border-radius:28px;padding:22px;text-align:center;margin-bottom:16px;font-size:22px;font-weight:500;box-shadow:var(--oglow);animation:pop .6s}
+.deck{perspective:1200px;margin:6px 0 18px;animation:cardin .4s cubic-bezier(.2,.8,.2,1) backwards}
+.fc{position:relative;display:block;width:100%;height:290px;border:0;background:none;padding:0;cursor:pointer;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.3,.8,.3,1)}
+.fc.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px 36px;text-align:center;font-size:21px;font-weight:300;border-radius:32px;overflow:auto;background:var(--bg);box-shadow:var(--raise)}
+.face.back{transform:rotateY(180deg);background:var(--og);color:#fff;box-shadow:var(--oglow)}
+.face.back .pg{background:rgba(255,255,255,.25);color:#fff}
+.hint{font-size:12px;color:var(--mute);font-weight:400}
+.fprog{height:8px;background:var(--bg);box-shadow:var(--ins2);border-radius:4px;margin-bottom:16px;overflow:hidden}
+.fprog i{display:block;height:100%;background:var(--og);border-radius:4px;transform-origin:left;animation:growx .5s backwards}
+.nav2{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.know{margin-bottom:14px}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg);color:var(--ink);padding:14px 24px 17px;border-radius:20px;max-width:90vw;z-index:30;box-shadow:var(--raise);overflow:hidden;animation:slidein .35s cubic-bezier(.2,.8,.2,1)}
+#toast::after{content:"";position:absolute;left:0;bottom:0;height:4px;background:var(--og);animation:shrink 6s linear forwards}
+body.drag::after{content:"Drop your PDF to upload";position:fixed;inset:14px;border:3px dashed var(--or);border-radius:32px;background:rgba(238,240,244,.92);display:grid;place-items:center;font-size:24px;font-weight:500;z-index:20}
+body.loading::before{content:"";position:fixed;top:0;width:35%;height:4px;background:var(--og);z-index:40;border-radius:0 4px 4px 0;animation:load 1.1s ease-in-out infinite}
+.sk{height:14px;border-radius:7px;margin:10px 0;background:linear-gradient(90deg,#E6E9EF 25%,#fff 50%,#E6E9EF 75%);background-size:200% 100%;animation:shimmer 1.3s linear infinite}
+.cf{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+.cf i{position:absolute;top:-14px;width:8px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+@keyframes growh{from{height:0}}
+@keyframes growx{from{transform:scaleX(0)}}
+@keyframes fade{from{opacity:0}}
+@keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+@keyframes drift{to{transform:translate(-80px,50px) scale(1.3)}}
+@keyframes shimmer{to{background-position:-200% 0}}
+@keyframes load{0%{left:-35%}100%{left:100%}}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(255,122,26,.55)}100%{box-shadow:0 0 0 9px rgba(255,122,26,0)}}
+@keyframes slidein{from{opacity:0;transform:translate(-50%,16px)}}
+@keyframes shrink{to{width:0}}
+@keyframes bounce{0%,80%,100%{transform:none;opacity:.4}40%{transform:translateY(-5px);opacity:1}}
+@keyframes cardin{from{opacity:0;transform:translateX(26px) scale(.97)}}
+@keyframes fall{to{transform:translate(var(--dx),105vh) rotate(720deg)}}
+.rise{animation:rise .6s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--i,0)*55ms)}
+@media(max-width:1180px){.ov{grid-template-columns:1fr 1fr}.cc{grid-column:1/-1;order:-1}.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:860px){.ov,.g3{grid-template-columns:1fr}.hdr{grid-template-columns:1fr auto}.ttl{display:none}.hr{grid-column:2;grid-row:1}h1{font-size:32px}#tab-chat .panel{height:76vh}.msg{max-width:96%}}
+@media(max-width:700px){.shell{padding:14px 14px 104px}.app{grid-template-columns:1fr}.nav{position:fixed;top:auto;left:14px;right:14px;bottom:14px;z-index:25;flex-direction:row;gap:6px;padding:8px;border-radius:30px}.nav button{flex:1;width:auto;height:58px;border-radius:22px;box-shadow:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}.nav button span{position:static;transform:none;opacity:1;background:none;box-shadow:none;padding:0;font-size:10px;color:inherit}.ind{border-radius:22px}.panel{padding:22px 18px}.steps{grid-template-columns:1fr}.pill{max-width:150px}.btn.red{padding:10px 16px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="hdr">
+    <div class="hl">
+      <div class="logo" data-ic="logo"></div>
+      <span class="pill" id="doc"><i class="dot"></i><span id="docName">No PDF</span></span>
+    </div>
+    <div class="ttl"><b>STUDY DESK</b><small>AI STUDY CENTER</small></div>
+    <div class="hr">
+      <button class="btn red" id="up"><i data-ic="plus"></i>Upload PDF</button>
+      <input type="file" id="file" accept="application/pdf,.pdf" hidden>
+    </div>
+  </header>
+
+  <div class="app">
+    <nav class="nav" aria-label="Sections"><span class="ind" id="ind"></span>
+      <button data-tab="home" data-ic="home" aria-current="true" aria-label="Overview"><span>Overview</span></button>
+      <button data-tab="chat" data-ic="chat" aria-current="false" aria-label="AI Chat"><span>AI Chat</span></button>
+      <button data-tab="sum" data-ic="sum" aria-current="false" aria-label="Summary"><span>Summary</span></button>
+      <button data-tab="quiz" data-ic="quiz" aria-current="false" aria-label="Quiz"><span>Quiz</span></button>
+      <button data-tab="flash" data-ic="cards" aria-current="false" aria-label="Flashcards"><span>Flashcards</span></button>
+    </nav>
+
+    <main style="min-width:0">
+      <section id="tab-home">
+        <h1 id="hello">Good morning,</h1>
+        <p class="sub">Here’s what’s happening in your study workspace today.</p>
+        <div class="ov">
+          <div class="cl">
+            <div class="stats" id="stats"></div>
+            <div class="card"><header><h3>Study Progress</h3></header>
+              <div class="tot"><small>Total activity</small><b id="tot"></b></div>
+              <div class="donut" id="seg"></div><div class="leg" id="leg"></div>
+            </div>
+          </div>
+          <div class="cc">
+            <div class="orb">
+              <svg class="ring" viewBox="0 0 200 200" aria-hidden="true"><circle class="trk" cx="100" cy="100" r="92"/><circle class="arc" id="arc" cx="100" cy="100" r="92"/></svg>
+              <div class="inner">
+                <svg class="lamp" viewBox="0 0 160 150" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#E7E9EF"/><stop offset=".5" stop-color="#B9BFCB"/><stop offset="1" stop-color="#8E95A4"/></linearGradient><radialGradient id="gl"><stop offset="0" stop-color="#FFB46B" stop-opacity=".6"/><stop offset="1" stop-color="#FFB46B" stop-opacity="0"/></radialGradient></defs><line x1="80" y1="0" x2="80" y2="32" stroke="#9AA1AF" stroke-width="2"/><rect x="72" y="28" width="16" height="14" rx="3" fill="#8E95A4"/><path d="M26 108Q26 52 80 42Q134 52 134 108Z" fill="url(#lg)"/><ellipse cx="80" cy="108" rx="54" ry="9" fill="#F4F5F8"/><ellipse cx="80" cy="118" rx="46" ry="26" fill="url(#gl)"/></svg>
+                <div class="big"><span id="hd">0</span>/5</div>
+                <p class="cap">STEPS COMPLETED</p>
+                <button class="pw" data-ic="plus" aria-label="Upload PDF" onclick="document.getElementById('file').click()"></button>
+              </div>
+            </div>
+            <div class="card" id="steps"></div>
+          </div>
+          <div class="cr">
+            <div class="card"><header><h3>Quiz Scores</h3><span class="tagl">Last 7 quizzes</span></header>
+              <div class="chart"><div class="yl"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div><div><div class="plot" id="plot"></div><div class="xl" id="xl"></div></div></div>
+            </div>
+            <div class="card ai">
+              <h3>Ask your PDF</h3>
+              <div class="chips"><button data-ask="Explain the main ideas">Explain the main ideas</button><button data-run="sum">Summarise this document</button></div>
+              <form class="glass" id="quick"><small>Answers use only your uploaded PDF</small>
+                <div class="in"><input id="qq" placeholder="Ask anything…" aria-label="Ask anything"><button class="send" aria-label="Send" data-ic="send"></button></div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="g3">
+          <div class="card"><header><h3>Recent Chats</h3><a data-go="chat">See more</a></header><ul id="recent"></ul></div>
+          <div class="card"><header><h3>Study Tools</h3></header><ul id="tools"></ul></div>
+          <div class="card"><header><h3>Study Materials</h3></header><ul id="mats"></ul></div>
+        </div>
+      </section>
+
+      <section id="tab-chat" hidden>
+        <div class="panel">
+          <h2>Chat with your PDF</h2>
+          <p class="lead">Questions are answered only from your document.</p>
+          <div id="msgs" aria-live="polite"></div>
+          <form class="composer" id="chatForm">
+            <textarea id="q" rows="1" placeholder="Ask a question about your PDF" aria-label="Question"></textarea>
+            <label>Passages <select id="k"><option>2</option><option selected>4</option><option>6</option><option>8</option><option>10</option></select></label>
+            <button class="btn red" id="send">Send</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="tab-sum" hidden>
+        <div class="panel">
+          <h2>Summary</h2>
+          <p class="lead">A page-by-page summary with citations. Long PDFs can take a while.</p>
+          <div class="bar2">
+            <button class="btn red" id="sumBtn">Summarise PDF</button>
+            <button class="btn ghost" id="copy" hidden>Copy summary</button>
+            <button class="btn ghost" id="dl" hidden>Download .txt</button>
+            <span class="meta" id="sumMeta"></span>
+          </div>
+          <div class="paper" id="sumOut" hidden></div>
+        </div>
+      </section>
+
+      <section id="tab-quiz" hidden>
+        <div class="panel">
+          <h2>Quiz</h2>
+          <p class="lead">Multiple-choice questions built from your PDF. Pick an answer to see the explanation.</p>
+          <div class="bar2">
+            <label>Questions <select id="qn"><option>5</option><option>10</option><option>15</option><option>20</option></select></label>
+            <button class="btn red" id="quizBtn">Generate quiz</button>
+          </div>
+          <div id="quizOut"></div>
+        </div>
+      </section>
+
+      <section id="tab-flash" hidden>
+        <div class="panel">
+          <h2>Flashcards</h2>
+          <p class="lead">Flip each card to check yourself. Use the arrow keys to move between cards.</p>
+          <div class="bar2">
+            <label>Cards <select id="fn"><option>5</option><option selected>10</option><option>20</option><option>30</option></select></label>
+            <button class="btn red" id="fcBtn">Generate flashcards</button>
+          </div>
+          <div id="fcOut"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+// Backend address. Change this if your FastAPI server runs elsewhere.
+const API = "http://127.0.0.1:8000";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pg = n => `<span class="pg">p.${esc(n)}</span>`;
+const pages = a => (a || []).map(pg).join(" ");
+
+const IC = {
+  logo: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5M9 8h6"/>',
+  home: '<path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  send: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+  chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  sum: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+  quiz: '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>',
+  cards: '<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  dots: '<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>'
+};
+const svg = (n, s = 18) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+document.querySelectorAll("[data-ic]").forEach(el => el.insertAdjacentHTML("afterbegin", svg(el.dataset.ic, el.dataset.ic === "logo" ? 22 : el.classList.contains("pw") ? 26 : 19)));
+
+function toast(m){
+  const t = $("#toast");
+  t.hidden = true; void t.offsetWidth;
+  t.textContent = m; t.hidden = false;
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => t.hidden = true, 6000);
+}
+
+async function api(path, opts){
+  let r;
+  try { r = await fetch(API + path, opts); }
+  catch { throw new Error("Cannot reach the server at " + API + ". Check that uvicorn is running and CORS is enabled."); }
+  let d = null;
+  try { d = await r.json(); } catch {}
+  if (!r.ok) {
+    const x = d && d.detail;
+    throw new Error(typeof x === "string" ? x : "Server error (" + r.status + ")");
+  }
+  return d;
+}
+
+async function run(btn, label, fn){
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = label;
+  document.body.classList.add("loading");
+  try { await fn(); } catch (e) { toast(e.message); }
+  finally { btn.disabled = false; btn.textContent = old; document.body.classList.remove("loading"); }
+}
+
+// Minimal, safe markdown: headings, lists, tables, bold, inline code, [Page N] chips
+function md(t){
+  t = esc(t).replace(/^```.*$/gm, "");
+  let out = "", list = null;
+  const close = () => { if (list) { out += `</${list}>`; list = null; } };
+  for (const l of t.split("\n")) {
+    let m;
+    if ((m = l.match(/^#{1,4}\s+(.*)/))) { close(); out += `<h4>${m[1]}</h4>`; }
+    else if ((m = l.match(/^\s*[-*•]\s+(.*)/))) { if (list !== "ul") { close(); out += "<ul>"; list = "ul"; } out += `<li>${m[1]}</li>`; }
+    else if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))) { if (list !== "ol") { close(); out += "<ol>"; list = "ol"; } out += `<li>${m[1]}</li>`; }
+    else if (l.trim().startsWith("|")) {
+      if (list !== "table") { close(); out += "<table>"; list = "table"; }
+      if (!/^\s*\|?[\s:|-]+\|?\s*$/.test(l)) {
+        const c = l.trim().replace(/^\||\|$/g, "").split("|");
+        out += "<tr>" + c.map(x => `<td>${x.trim()}</td>`).join("") + "</tr>";
+      }
+    }
+    else if (!l.trim()) close();
+    else { close(); out += `<p>${l}</p>`; }
+  }
+  close();
+  return out.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+            .replace(/`([^`]+)`/g, "<code>$1</code>")
+            .replace(/\[Page (\d+)\]/g, (_, n) => pg(n));
+}
+
+/* ---------- Saved dashboard state ---------- */
+const fresh = () => ({ doc: null, docT: 0, recent: [], n: { asked: 0, sum: 0, qans: 0, cards: 0 }, last: {}, scores: [] });
+let S = fresh();
+try { Object.assign(S, JSON.parse(localStorage.getItem("studydesk") || "{}")); } catch {}
+const save = () => { try { localStorage.setItem("studydesk", JSON.stringify(S)); } catch {} };
+const tick = () => { save(); render(); };
+const ago = t => {
+  if (!t) return "";
+  const m = Math.round((Date.now() - t) / 6e4);
+  return m < 1 ? "Just now" : m < 60 ? m + "m ago" : m < 1440 ? Math.round(m / 60) + "h ago" : Math.round(m / 1440) + "d ago";
+};
+
+const SP = [[40,70,50,90,60,100],[60,40,80,55,95,70],[30,60,45,85,50,100],[55,80,40,70,90,65]];
+
+function render(){
+  const d = S.doc, n = S.n, sc = S.scores;
+  const avg = sc.length ? Math.round(sc.reduce((a, b) => a + b, 0) / sc.length) + "%" : "–";
+  const st = [
+    ["PDF pages", d ? d.pages : 0, "in your PDF"],
+    ["Passages", d ? d.chunks : 0, "indexed for search"],
+    ["Questions asked", n.asked, "about this PDF"],
+    ["Quiz average", avg, `across ${sc.length} ${sc.length === 1 ? "quiz" : "quizzes"}`]
+  ];
+  $("#stats").innerHTML = st.map(([l, v, f], i) =>
+    `<div class="stat"><div class="top"><div><small>${l}</small><b data-to="${v}" data-k="${l}">${v}</b></div><div class="spark" aria-hidden="true">${SP[i].map((h, j) => `<i style="height:${h}%;--d:${j}"${j === 5 ? ' class="r"' : ""}></i>`).join("")}</div></div><div class="foot"><span>${f}</span>${svg("dots", 15)}</div></div>`).join("");
+
+  $("#recent").innerHTML = S.recent.length
+    ? S.recent.map(r => `<li data-go="chat"><span class="ico">${svg("chat")}</span><div><b>${esc(r.q)}</b><small>${esc(r.a)}</small></div><time>${ago(r.t)}</time></li>`).join("")
+    : '<li class="none">No chats yet. Ask a question about your PDF.</li>';
+
+  const tools = [["chat","chat","Chat with PDF","Ask questions, get cited answers"],["sum","sum","Summarise PDF","Page-by-page study summary"],["quiz","quiz","Generate quiz","Multiple-choice questions"],["flash","cards","Make flashcards","Revision cards with page numbers"]];
+  $("#tools").innerHTML = tools.map(([t, i, a, b]) =>
+    `<li data-go="${t}"><span class="ico red">${svg(i)}</span><div><b>${a}</b><small>${b}</small></div><time>${ago(S.last[t]) || "Not run"}</time></li>`).join("");
+
+  const seg = [["Questions", n.asked, "#FF7A1A"], ["Summaries", n.sum, "#FFC08A"], ["Quiz answers", n.qans, "#5B8DEF"], ["Flashcards", n.cards, "#A3A9B7"]];
+  const tot = seg.reduce((a, s) => a + s[1], 0);
+  $("#tot").innerHTML = `<span data-to="${tot}" data-k="tot">${tot}</span>` + (tot === 1 ? " study action" : " study actions");
+  let a = 0;
+  $("#seg").style.background = "conic-gradient(" + (tot ? seg.filter(s => s[1]).map(s => { const p = s[1] / tot * 100, x = `${s[2]} ${a}% ${a + p}%`; a += p; return x; }).join(",") : "#E0E3EA 0 100%") + ")";
+  $("#leg").innerHTML = seg.map(s => `<span><i style="background:${s[2]}"></i>${s[0]} ${s[1]}</span>`).join("");
+
+  const last = sc.slice(-7), sl = [...last, ...Array(7 - last.length).fill(null)];
+  $("#plot").innerHTML = sl.map((v, i) => `<div class="col">${v === null ? "" : `<div class="bar${i === last.length - 1 ? " hot" : ""}" style="height:${Math.max(v, 4)}%">${i === last.length - 1 ? `<em>${v}%</em>` : ""}</div>`}</div>`).join("") + (last.length ? "" : '<p class="none">Finish a quiz to see your scores here.</p>');
+  $("#xl").innerHTML = sl.map((v, i) => `<span>${v === null ? "" : "#" + (sc.length - last.length + i + 1)}</span>`).join("");
+
+  const mats = [
+    ["PDF", d ? d.name : "No PDF uploaded", d ? `${d.pages} pages, ${d.chunks} passages` : "Upload one to begin", "#FF7A1A", S.docT, ""],
+    ["SUM", "Summary", S.last.sum ? "Generated" : "Not generated yet", "#5B8DEF", S.last.sum, "sum"],
+    ["QUIZ", "Quiz", S.last.quiz ? "Generated" : "Not generated yet", "#8A91A0", S.last.quiz, "quiz"],
+    ["CARD", "Flashcards", S.last.flash ? "Generated" : "Not generated yet", "#FFA24C", S.last.flash, "flash"]
+  ];
+  $("#mats").innerHTML = mats.map(([t, a, b, c, tm, g]) =>
+    `<li${g ? ` data-go="${g}"` : ""}><span class="tag" style="background:${c}">${t}</span><div><b>${esc(a)}</b><small>${b}</small></div><time>${ago(tm)}</time></li>`).join("");
+
+  const steps = [["Upload a PDF", !!d], ["Ask a question", n.asked > 0], ["Generate a summary", n.sum > 0], ["Answer a quiz", n.qans > 0], ["Make flashcards", n.cards > 0]];
+  const dn = steps.filter(x => x[1]).length;
+  $("#steps").innerHTML = `<header><h3>Study checklist</h3><span class="tagl">${dn} of ${steps.length} done</span></header><div class="steps">${steps.map(([t, ok], i) => `<div class="step${ok ? " done" : ""}" style="--d:${i}"><span class="chk">${ok ? svg("check", 14) : i + 1}</span>${t}</div>`).join("")}</div>`;
+  $("#hd").textContent = dn;
+  setTimeout(() => $("#arc").style.strokeDashoffset = 578 * (1 - dn / steps.length), 80);
+  countUps();
+}
+
+/* ---------- Motion helpers ---------- */
+const shown = {};
+const reduce = () => matchMedia("(prefers-reduced-motion:reduce)").matches;
+function countUps(){
+  document.querySelectorAll("[data-to]").forEach(el => {
+    const to = parseFloat(el.dataset.to), k = el.dataset.k, sfx = el.dataset.to.replace(/[\d.]/g, "");
+    if (isNaN(to)) return;
+    const from = shown[k] || 0;
+    shown[k] = to;
+    if (from === to || reduce()) { el.textContent = to + sfx; return; }
+    const t0 = performance.now();
+    (function f(t){
+      const p = Math.min((t - t0) / 900, 1), e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(from + (to - from) * e) + sfx;
+      if (p < 1) requestAnimationFrame(f);
+    })(t0);
+  });
+}
+function enter(sec){
+  sec.querySelectorAll("h1,.sub,.stat,.card,.panel").forEach((el, i) => {
+    el.style.setProperty("--i", i);
+    el.classList.remove("rise"); void el.offsetWidth; el.classList.add("rise");
+  });
+}
+function moveInd(){
+  const b = document.querySelector('.nav button[aria-current="true"]'), i = $("#ind");
+  if (!b) return;
+  i.style.width = b.offsetWidth + "px"; i.style.height = b.offsetHeight + "px";
+  i.style.transform = `translate(${b.offsetLeft}px,${b.offsetTop}px)`;
+}
+addEventListener("resize", moveInd);
+const skel = n => Array.from({ length: n }, (_, i) => `<div class="sk" style="width:${96 - (i * 17) % 44}%"></div>`).join("");
+function confetti(){
+  if (reduce()) return;
+  const w = document.createElement("div");
+  w.className = "cf";
+  const cols = ["#FF7A1A", "#FFC08A", "#5B8DEF", "#A3A9B7", "#3B3F4A"];
+  w.innerHTML = Array.from({ length: 44 }, () => `<i style="left:${Math.random() * 100}%;background:${cols[Math.floor(Math.random() * 5)]};--dx:${Math.random() * 160 - 80}px;animation-delay:${Math.random() * .4}s;animation-duration:${1.6 + Math.random() * 1.2}s"></i>`).join("");
+  document.body.append(w);
+  setTimeout(() => w.remove(), 3500);
+}
+
+/* ---------- Navigation ---------- */
+function go(t){
+  document.querySelectorAll(".nav button").forEach(b => b.setAttribute("aria-current", b.dataset.tab === t));
+  document.querySelectorAll("section").forEach(s => s.hidden = s.id !== "tab-" + t);
+  scrollTo(0, 0);
+  if (t === "home") { for (const k in shown) delete shown[k]; render(); }
+  enter($("#tab-" + t)); moveInd();
+}
+document.querySelectorAll(".nav button").forEach(b => b.onclick = () => go(b.dataset.tab));
+
+function ask(v){ go("chat"); $("#q").value = v; $("#chatForm").requestSubmit(); }
+$("#quick").onsubmit = e => {
+  e.preventDefault();
+  const v = $("#qq").value.trim();
+  if (v) { $("#qq").value = ""; ask(v); }
+};
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-go]"); if (g) return go(g.dataset.go);
+  const a = e.target.closest("[data-ask]"); if (a) return ask(a.dataset.ask);
+  const r = e.target.closest("[data-run]");
+  if (r) { go(r.dataset.run); $(r.dataset.run === "sum" ? "#sumBtn" : "#quizBtn").click(); }
+});
+
+/* ---------- Upload ---------- */
+$("#up").onclick = () => $("#file").click();
+$("#file").onchange = e => { upload(e.target.files[0]); e.target.value = ""; };
+addEventListener("dragenter", e => { e.preventDefault(); document.body.classList.add("drag"); });
+addEventListener("dragover", e => e.preventDefault());
+addEventListener("dragleave", e => { if (!e.relatedTarget) document.body.classList.remove("drag"); });
+addEventListener("drop", e => { e.preventDefault(); document.body.classList.remove("drag"); upload(e.dataTransfer.files[0]); });
+
+function setDoc(state, name, meta){
+  $("#doc").className = "pill " + state;
+  $("#doc").title = meta;
+  $("#docName").textContent = name;
+}
+
+async function upload(f){
+  if (!f) return;
+  if (!/\.pdf$/i.test(f.name)) return toast("Please choose a PDF file.");
+  setDoc("busy", f.name, "Reading and indexing. This can take a minute.");
+  document.body.classList.add("loading");
+  const fd = new FormData();
+  fd.append("file", f);
+  try {
+    const d = await api("/upload/", { method: "POST", body: fd });
+    S = fresh();
+    S.doc = { name: d.filename, pages: d.pages_processed, chunks: d.chunks_created };
+    S.docT = Date.now();
+    document.body.classList.remove("loading");
+    setDoc("ok", d.filename, "PDF indexed");
+    resetAll(); tick();
+    toast("PDF ready. Ask a question or generate study material.");
+  } catch (e) {
+    document.body.classList.remove("loading");
+    setDoc(S.doc ? "ok" : "", S.doc ? S.doc.name : "Upload failed", "");
+    toast(e.message);
+  }
+}
+
+/* ---------- Chat ---------- */
+const msgs = $("#msgs");
+const emptyHTML = `<div class="empty" id="empty"><b>Ask anything about your PDF</b><p>Answers cite the pages they came from, so you can check them in your notes.</p><div class="chips"><button data-ask="Explain the main ideas">Explain the main ideas</button><button data-ask="List the key definitions">List the key definitions</button></div></div>`;
+const resetChat = () => { msgs.innerHTML = emptyHTML; };
+
+function add(cls, html){
+  $("#empty")?.remove();
+  const m = document.createElement("div");
+  m.className = "msg " + cls;
+  m.innerHTML = html;
+  msgs.append(m);
+  msgs.scrollTop = msgs.scrollHeight;
+  return m;
+}
+
+$("#chatForm").onsubmit = async e => {
+  e.preventDefault();
+  const q = $("#q").value.trim();
+  if (!q) return;
+  $("#q").value = "";
+  add("me", esc(q));
+  const wait = add("md", '<div class="typing" aria-label="Thinking"><i></i><i></i><i></i></div>');
+  const btn = $("#send");
+  btn.disabled = true;
+  try {
+    const d = await api("/chat/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: q, k: +$("#k").value })
+    });
+    wait.innerHTML = md(d.answer) + (d.source_pages.length
+      ? `<div class="srcs">Sources ${pages(d.source_pages)}<details><summary>Show retrieved passages</summary>${d.sources.map(s => `<div class="passage">${pg(s.page_number)} ${esc(s.text)}</div>`).join("")}</details></div>`
+      : "");
+    wait._t = d.answer;
+    wait.insertAdjacentHTML("beforeend", `<div class="mf"><time>${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time><button class="cp" type="button">Copy answer</button></div>`);
+    S.n.asked++; S.last.chat = Date.now();
+    S.recent.unshift({ q, a: d.answer.replace(/[*#`|]/g, "").replace(/\s+/g, " ").trim().slice(0, 70), t: Date.now() });
+    S.recent = S.recent.slice(0, 4);
+    tick();
+  } catch (err) { wait.remove(); toast(err.message); }
+  finally { btn.disabled = false; $("#q").focus(); msgs.scrollTop = msgs.scrollHeight; }
+};
+$("#q").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#chatForm").requestSubmit(); }
+});
+
+msgs.addEventListener("click", e => {
+  const b = e.target.closest(".cp");
+  if (!b) return;
+  navigator.clipboard.writeText(b.closest(".msg")._t).then(
+    () => { b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy answer", 1500); },
+    () => toast("Copy failed.")
+  );
+});
+
+/* ---------- Summary ---------- */
+let sumText = "";
+$("#sumBtn").onclick = e => run(e.target, "Summarising…", async () => {
+  const box = $("#sumOut"), prev = [box.innerHTML, box.hidden];
+  box.hidden = false; box.innerHTML = skel(8);
+  let d;
+  try { d = await api("/summary/", { method: "POST" }); }
+  catch (err) { [box.innerHTML, box.hidden] = prev; throw err; }
+  sumText = d.summary;
+  $("#sumOut").innerHTML = `<div class="md">${md(d.summary)}</div>`;
+  $("#sumOut").hidden = false;
+  $("#sumOut").querySelectorAll(".md>*").forEach((el, i) => el.style.setProperty("--i", Math.min(i, 14)));
+  $("#copy").hidden = false; $("#dl").hidden = false;
+  const words = d.summary.trim().split(/\s+/).length;
+  $("#sumMeta").textContent = `Summarised ${d.pages_processed} pages, ${words} words, about ${Math.max(1, Math.round(words / 200))} min read`;
+  S.n.sum++; S.last.sum = Date.now(); tick();
+});
+$("#dl").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([sumText], { type: "text/plain" }));
+  a.download = "summary.txt"; a.click(); URL.revokeObjectURL(a.href);
+};
+$("#copy").onclick = async () => {
+  try { await navigator.clipboard.writeText(sumText); toast("Summary copied."); }
+  catch { toast("Copy failed. Select the text and copy it manually."); }
+};
+
+/* ---------- Quiz ---------- */
+let quiz = [], done = 0, score = 0;
+const qstat = () => {
+  $("#qs").textContent = `Answered ${done} of ${quiz.length}, score ${score}`;
+  $("#qp").style.width = done / quiz.length * 100 + "%";
+};
+
+$("#quizBtn").onclick = e => run(e.target, "Generating…", async () => {
+  const prevQ = $("#quizOut").innerHTML;
+  $("#quizOut").innerHTML = '<div class="q">' + skel(6) + '</div>';
+  let d;
+  try { d = await api("/quiz/?num_questions=" + $("#qn").value, { method: "POST" }); }
+  catch (err) { $("#quizOut").innerHTML = prevQ; throw err; }
+  quiz = d.questions; done = 0; score = 0;
+  S.last.quiz = Date.now(); tick();
+  const box = $("#quizOut");
+  if (!quiz.length) { box.innerHTML = '<p class="lead">No questions could be made from this PDF.</p>'; return; }
+  box.innerHTML = `<div class="qstat"><span id="qs"></span><div class="qprog"><i id="qp"></i></div></div><div id="res"></div>` + quiz.map((q, i) =>
+    `<div class="q" data-i="${i}"><h3>${i + 1}. ${esc(q.question)}</h3>${q.options.map(o =>
+      `<button class="opt" data-id="${o.option_id}"><b>${o.option_id}</b><span>${esc(o.text)}</span></button>`).join("")}<div class="why" hidden></div></div>`).join("");
+  qstat();
+});
+
+$("#quizOut").addEventListener("click", e => {
+  const o = e.target.closest(".opt");
+  if (!o) return;
+  const card = o.closest(".q"), q = quiz[+card.dataset.i], ok = o.dataset.id === q.correct_answer;
+  card.querySelectorAll(".opt").forEach(b => { b.disabled = true; if (b.dataset.id === q.correct_answer) b.classList.add("ok"); });
+  if (!ok) o.classList.add("bad");
+  const w = card.querySelector(".why");
+  w.hidden = false;
+  w.innerHTML = `<b>${ok ? "Correct." : "Not quite. The answer is " + q.correct_answer + "."}</b> ${esc(q.explanation)} ${pg(q.page_number)}`;
+  done++; if (ok) score++;
+  S.n.qans++;
+  qstat();
+  if (done === quiz.length) {
+    const pct = Math.round(score / quiz.length * 100);
+    S.scores.push(pct); S.scores = S.scores.slice(-20);
+    $("#res").innerHTML = `<div class="result">${pct >= 80 ? "Excellent work" : pct >= 50 ? "Good effort" : "Keep practising"}<br>You scored ${score} of ${quiz.length} (${pct}%)</div>`;
+    $("#res").scrollIntoView({ block: "center" });
+    if (pct >= 80) confetti();
+  }
+  tick();
+});
+
+/* ---------- Flashcards ---------- */
+let cards = [], ci = 0;
+const known = new Set();
+const flip = () => $("#card")?.classList.toggle("flip");
+const step = d => { ci = (ci + d + cards.length) % cards.length; showCard(); };
+
+$("#fcBtn").onclick = e => run(e.target, "Generating…", async () => {
+  const prevF = $("#fcOut").innerHTML;
+  $("#fcOut").innerHTML = '<div class="sk" style="height:290px;border-radius:32px;margin:0"></div>';
+  let d;
+  try { d = await api("/flashcards/?num_cards=" + $("#fn").value, { method: "POST" }); }
+  catch (err) { $("#fcOut").innerHTML = prevF; throw err; }
+  known.clear();
+  cards = d.flashcards; ci = 0; showCard();
+  S.n.cards += cards.length; S.last.flash = Date.now(); tick();
+});
+
+function showCard(){
+  const box = $("#fcOut");
+  if (!cards.length) { box.innerHTML = '<p class="lead">No flashcards could be made from this PDF.</p>'; return; }
+  const c = cards[ci];
+  box.innerHTML = `<div class="deck"><button class="fc" id="card" aria-label="Flashcard. Press to flip."><span class="face"><span>${esc(c.front)}</span>${known.has(c.front) ? '<span class="pg">Known</span>' : ""}<span class="hint">Click or press Space to flip</span></span><span class="face back"><span>${esc(c.back)}</span><span>${pg(c.page_number)}</span></span></button></div>
+<div class="fprog"><i style="width:${(ci + 1) / cards.length * 100}%"></i></div>
+  <div class="nav2 know"><span class="meta">Known ${cards.filter(x => known.has(x.front)).length} of ${cards.length}</span><span><button class="btn ghost" id="again">Review again</button> <button class="btn red" id="got">Got it</button></span></div>
+  <div class="nav2"><button class="btn ghost" id="prev">Previous</button><span>${ci + 1} of ${cards.length}</span><button class="btn ghost" id="shuf">Shuffle</button><button class="btn" id="next">Next</button></div>`;
+  $("#card").onclick = flip;
+  $("#got").onclick = () => { known.add(c.front); step(1); };
+  $("#again").onclick = () => { known.delete(c.front); step(1); };
+  $("#prev").onclick = () => step(-1);
+  $("#next").onclick = () => step(1);
+  $("#shuf").onclick = () => { cards.sort(() => Math.random() - .5); ci = 0; showCard(); };
+}
+
+document.addEventListener("keydown", e => {
+  if ($("#tab-flash").hidden || !cards.length || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  if (e.key === "ArrowRight") step(1);
+  else if (e.key === "ArrowLeft") step(-1);
+});
+
+function resetAll(){
+  resetChat();
+  sumText = ""; $("#sumOut").hidden = true; $("#copy").hidden = true; $("#dl").hidden = true; $("#sumMeta").textContent = "";
+  quiz = []; $("#quizOut").innerHTML = "";
+  cards = []; known.clear(); $("#fcOut").innerHTML = "";
+}
+
+/* ---------- Start ---------- */
+const h = new Date().getHours();
+$("#hello").textContent = "Good " + (h < 12 ? "morning" : h < 18 ? "afternoon" : "evening") + ",";
+if (S.doc) setDoc("ok", S.doc.name, "PDF indexed");
+resetChat();
+render();
+enter($("#tab-home"));
+moveInd();
+document.fonts?.ready.then(moveInd);
+</script>
+</body>
+</html>

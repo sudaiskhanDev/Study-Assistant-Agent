@@ -1,0 +1,27 @@
+# --- LangChain / LLM stack (as requested) ---
+langchain
+langchain-core
+langchain-community
+langchain-openai
+langchain-groq
+chromadb
+sentence-transformers
+langchain-huggingface
+pypdf
+python-dotenv
+tiktoken
+
+# --- Web framework (FastAPI backend needs these) ---
+fastapi
+uvicorn[standard]
+python-multipart
+
+# --- PDF + chunking (used by pdf_controller.py) ---
+pymupdf
+langchain-text-splitters
+
+# --- Chroma vector store integration (used by embedding_controller.py) ---
+langchain-chroma
+
+# --- Groq SDK (for RateLimitError import) ---
+groq
